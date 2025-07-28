@@ -1,0 +1,143 @@
+{
+  "serial_port": {
+    "device": "/dev/ttyS1",
+    "baud_rate": 1200,
+    "timeout_ms": 1000
+  },
+  "usb_copy": {
+    "io_port": 2597,
+    "poll_interval_ms": 50,
+    "enabled": true
+  },
+  "display": {
+    "width": 16,
+    "height": 2,
+    "backlight_pin": -1,
+    "contrast": 128,
+    "default_text": "QNAP Ready"
+  },
+  "logging": {
+    "level": "info",
+    "file": "",
+    "max_size_mb": 10,
+    "max_age_days": 30,
+    "compress": true
+  },
+  "menu": {
+    "enabled": true,
+    "button_delay_ms": 200,
+    "main_menu": {
+      "title": "QNAP Control",
+      "description": "Main Menu",
+      "type": "submenu",
+      "items": {
+        "system": {
+          "title": "System Info",
+          "description": "Show system information",
+          "type": "command",
+          "command": "uname -a | head -c 16"
+        },
+        "network": {
+          "title": "Network",
+          "description": "Network settings",
+          "type": "submenu",
+          "items": {
+            "ip": {
+              "title": "Show IP",
+              "description": "Display IP address",
+              "type": "command",
+              "command": "hostname -I | awk '{print $1}'"
+            },
+            "ping": {
+              "title": "Ping Test",
+              "description": "Test connectivity",
+              "type": "command",
+              "command": "ping -c 1 8.8.8.8 >/dev/null && echo 'Connected' || echo 'No Internet'"
+            },
+            "interfaces": {
+              "title": "Interfaces",
+              "description": "Network interfaces",
+              "type": "command",
+              "command": "ip -o link show | wc -l"
+            }
+          }
+        },
+        "storage": {
+          "title": "Storage",
+          "description": "Storage information",
+          "type": "submenu",
+          "items": {
+            "usage": {
+              "title": "Disk Usage",
+              "description": "Show disk usage",
+              "type": "command",
+              "command": "df -h / | awk 'NR==2 {print $5}'"
+            },
+            "free": {
+              "title": "Free Space",
+              "description": "Show free space",
+              "type": "command",
+              "command": "df -h / | awk 'NR==2 {print $4}'"
+            },
+            "mounts": {
+              "title": "Mounts",
+              "description": "Show mount points",
+              "type": "command",
+              "command": "mount | wc -l"
+            }
+          }
+        },
+        "services": {
+          "title": "Services",
+          "description": "System services",
+          "type": "submenu",
+          "items": {
+            "status": {
+              "title": "Service Status",
+              "description": "Check services",
+              "type": "command",
+              "command": "systemctl --failed --no-legend | wc -l"
+            },
+            "uptime": {
+              "title": "Uptime",
+              "description": "System uptime",
+              "type": "command",
+              "command": "uptime | awk '{print $3}' | sed 's/,//'"
+            },
+            "load": {
+              "title": "Load Average",
+              "description": "System load",
+              "type": "command",
+              "command": "uptime | awk '{print $(NF-2)}' | sed 's/,//'"
+            }
+          }
+        },
+        "maintenance": {
+          "title": "Maintenance",
+          "description": "System maintenance",
+          "type": "submenu",
+          "items": {
+            "temperature": {
+              "title": "Temperature",
+              "description": "CPU temperature",
+              "type": "command",
+              "command": "sensors 2>/dev/null | grep -i 'core 0' | awk '{print $3}' || echo 'N/A'"
+            },
+            "memory": {
+              "title": "Memory",
+              "description": "Memory usage",
+              "type": "command",
+              "command": "free | awk 'NR==2{printf \"%.0f%%\", $3*100/$2}'"
+            },
+            "reboot": {
+              "title": "Reboot",
+              "description": "Restart system",
+              "type": "command",
+              "command": "echo 'Rebooting...' && sleep 2 && systemctl reboot"
+            }
+          }
+        }
+      }
+    }
+  }
+}

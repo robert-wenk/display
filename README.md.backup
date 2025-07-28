@@ -1,0 +1,140 @@
+# QNAP TS-670 Pro Display Control
+
+A Python script for controlling the LCD display and USB COPY button on QNAP TS-670 Pro NAS devices.
+
+## Features
+
+- **LCD Display Control**: Write text to the 2-line, 16-character LCD display
+- **Backlight Control**: Turn the LCD backlight on/off
+- **USB COPY Button Monitoring**: Real-time detection of USB COPY button presses using I/O port polling
+- **Button Callbacks**: Register custom functions to handle button press events
+- **Hardware Integration**: Direct hardware access via serial communication and I/O ports
+
+## Requirements
+
+- QNAP TS-670 Pro NAS device
+- Python 3.6+
+- `pyserial` library
+- Root privileges (for hardware access)
+- Linux-based system with I/O port access
+
+## Installation
+
+1. Install required dependencies:
+```bash
+pip3 install pyserial
+```
+
+2. Clone or download the script to your QNAP device
+
+## Usage
+
+### Basic Usage
+
+Run the main demo script with root privileges:
+
+```bash
+sudo python3 qnap_display_control.py
+```
+
+### Test USB COPY Button Only
+
+To test just the USB COPY button functionality:
+
+```bash
+sudo python3 qnap_display_control.py --test-usb-copy
+```
+
+### USB COPY Button Example
+
+Run the dedicated USB COPY button example:
+
+```bash
+sudo python3 usb_copy_example.py
+```
+
+### Programming Interface
+
+```python
+from qnap_display_control import QNAPDisplayController
+
+# Create controller with USB COPY monitoring enabled
+controller = QNAPDisplayController(enable_usb_copy_monitoring=True)
+
+# Register a callback for USB COPY button
+def my_copy_handler(pressed):
+    if pressed:
+        print("Copy button pressed!")
+        # Your copy logic here
+
+controller.register_button_callback("USB_COPY", my_copy_handler)
+
+# Connect and use
+with controller:
+    controller.set_backlight(True)
+    controller.display_message("Hello", "World!")
+    
+    # Check button state
+    if controller.is_usb_copy_pressed():
+        print("Button is currently pressed")
+```
+
+## Hardware Details
+
+### USB COPY Button Detection
+
+The USB COPY button is detected using raw I/O port access:
+- **Port Address**: `0xa05` (register), `0xa06` (value)
+- **Detection Method**: `ioperm()` and `inb()` system calls via ctypes
+- **Button Bit**: Bit 2 in the port value
+- **Polling Rate**: 100ms (configurable)
+
+### LCD Communication
+
+- **Serial Port**: `/dev/ttyS1`
+- **Baud Rate**: 1200
+- **Protocol**: Custom QNAP protocol based on research
+
+## Technical Implementation
+
+The script implements hardware access through:
+
+1. **Serial Communication**: For LCD display control
+2. **I/O Port Access**: For USB COPY button detection using:
+   - `ctypes` library for system call access
+   - `ioperm()` to enable I/O port access
+   - `inb()` to read port values
+   - Bit manipulation to detect button state
+
+## Troubleshooting
+
+### Permission Errors
+Make sure to run with root privileges:
+```bash
+sudo python3 qnap_display_control.py
+```
+
+### Serial Port Not Found
+Verify the serial port exists:
+```bash
+ls -l /dev/ttyS1
+```
+
+### I/O Port Access Failed
+Ensure you're running on a compatible system with I/O port access and root privileges.
+
+## Safety Notes
+
+- Always run with appropriate privileges
+- The script requires direct hardware access
+- Test thoroughly before using in production
+- Monitor system logs for any hardware-related errors
+
+## License
+
+MIT License - See script header for details.
+
+## Credits
+
+Based on research from the qnapctl project and QNAP hardware documentation.
+USB COPY button implementation based on manus.ai research findings.

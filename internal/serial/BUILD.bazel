@@ -1,0 +1,16 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "serial",
+    srcs = ["serial_port.go"],
+    importpath = "github.com/qnap/display-control/internal/serial",
+    visibility = ["//:__subpackages__"],
+    deps = ["@com_github_tarm_serial//:serial"],
+)
+
+go_test(
+    name = "serial_test",
+    srcs = ["serial_port_test.go"],
+    embed = [":serial"],
+    deps = ["@com_github_stretchr_testify//assert"],
+)

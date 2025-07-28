@@ -1,0 +1,106 @@
+{
+  "serial_port": {
+    "device": "/dev/ttyS1",
+    "baud_rate": 1200,
+    "timeout_ms": 1000
+  },
+  "usb_copy": {
+    "io_port": 2565,
+    "poll_interval_ms": 50,
+    "enabled": true,
+    "command": "cp -r /media/usb/* /share/USB_Copy/ && sync"
+  },
+  "display": {
+    "width": 16,
+    "height": 2,
+    "backlight_pin": -1,
+    "contrast": 128,
+    "default_text": "QNAP Ready"
+  },
+  "logging": {
+    "level": "info",
+    "file": "",
+    "max_size_mb": 10,
+    "max_age_days": 30,
+    "compress": true
+  },
+  "menu": {
+    "enabled": true,
+    "button_delay_ms": 200,
+    "main_menu": {
+      "title": "Main Menu",
+      "description": "QNAP Control",
+      "type": "submenu",
+      "items": {
+        "system": {
+          "title": "System Info",
+          "description": "Show system information",
+          "type": "command",
+          "command": "uname -a"
+        },
+        "network": {
+          "title": "Network",
+          "description": "Network configuration",
+          "type": "submenu",
+          "items": {
+            "ip": {
+              "title": "Show IP",
+              "description": "Display IP address",
+              "type": "command",
+              "command": "hostname -I"
+            },
+            "ping": {
+              "title": "Ping Test",
+              "description": "Test network connectivity",
+              "type": "command",
+              "command": "ping -c 1 8.8.8.8"
+            },
+            "back": {
+              "title": "← Back",
+              "description": "Return to main menu",
+              "type": "back",
+              "command": ""
+            }
+          }
+        },
+        "display": {
+          "title": "Display",
+          "description": "Display settings",
+          "type": "submenu",
+          "items": {
+            "backlight_on": {
+              "title": "Backlight On",
+              "description": "Turn backlight on",
+              "type": "display_command",
+              "command": "backlight_on"
+            },
+            "backlight_off": {
+              "title": "Backlight Off",
+              "description": "Turn backlight off",
+              "type": "display_command",
+              "command": "backlight_off"
+            },
+            "back": {
+              "title": "← Back",
+              "description": "Return to main menu",
+              "type": "back",
+              "command": ""
+            }
+          }
+        },
+        "storage": {
+          "title": "Storage",
+          "description": "Storage information",
+          "type": "command",
+          "command": "df -h"
+        },
+        "reboot": {
+          "title": "Reboot",
+          "description": "Restart system",
+          "type": "command",
+          "command": "systemctl reboot"
+        }
+      }
+    }
+  }
+}

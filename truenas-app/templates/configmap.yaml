@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "qnap-display-control.fullname" . }}-config
+  labels:
+    {{- include "qnap-display-control.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {
+      "serial_port": {
+        "device": "{{ .Values.config.serialPort.device | default "/dev/ttyS1" }}",
+        "baud_rate": {{ .Values.config.serialPort.baudRate | default 1200 }},
+        "timeout_ms": {{ .Values.config.serialPort.timeout | default 1000 }}
+      },
+      "usb_copy": {
+        "io_port": "{{ .Values.hardwareAccess.ioPortAccess.port | default "0xa05" }}",
+        "poll_interval_ms": 50,
+        "enabled": {{ .Values.hardwareAccess.ioPortAccess.enabled | default true }},
+        "command": "TIMESTAMP=$(date +%Y%m%d%H%M%S) && mkdir -p /mnt/pool/Multimedia/usb-copy$TIMESTAMP && cp -r {{ .Values.hardwareAccess.usbAccess.mountPath | default "/media/usb" }}/* /mnt/pool/Multimedia/usb-copy$TIMESTAMP/ && sync && sleep 10"
+      },
+      "display": {
+        "width": {{ .Values.config.display.width | default 16 }},
+        "height": {{ .Values.config.display.height | default 2 }},
+        "backlight_pin": -1,
+        "contrast": 128,
+        "default_text": "{{ .Values.config.display.defaultText | default "TrueNAS Ready" }}"
+      },
+      "logging": {
+        "level": "{{ .Values.config.logging.level | default "info" }}",
+        "file": "",
+        "max_size_mb": 10,
+        "max_age_days": 30,
+        "compress": true
+      },
+      "menu": {
+        "enabled": true,
+        "button_delay_ms": 200,
+        "main_menu": {
+          "title": "Main Menu",
+          "description": "TrueNAS Control",
+          "type": "submenu",
+          "items": {
+            "system": {
+              "title": "System Info",
+              "description": "Show system information",
+              "type": "command",
+              "command": "uname -a"
+            },
+            "network": {
+              "title": "Network",
+              "description": "Network configuration",
+              "type": "submenu",
+              "items": {
+                "ip": {
+                  "title": "Show IP",
+                  "description": "Display IP address",
+                  "type": "command",
+                  "command": "hostname -I"
+                },
+                "ping": {
+                  "title": "Ping Test",
+                  "description": "Test network connectivity",
+                  "type": "command",
+                  "command": "ping -c 1 8.8.8.8"
+                },
+                "back": {
+                  "title": "← Back",
+                  "description": "Return to main menu",
+                  "type": "back",
+                  "command": ""
+                }
+              }
+            },
+            "storage": {
+              "title": "Storage",
+              "description": "Storage information",
+              "type": "command",
+              "command": "df -h"
+            },
+            "truenas": {
+              "title": "TrueNAS",
+              "description": "TrueNAS specific commands",
+              "type": "submenu", 
+              "items": {
+                "pools": {
+                  "title": "Pool Status",
+                  "description": "Show ZFS pool status",
+                  "type": "command",
+                  "command": "zpool status"
+                },
+                "datasets": {
+                  "title": "Datasets",
+                  "description": "List ZFS datasets",
+                  "type": "command", 
+                  "command": "zfs list"
+                },
+                "services": {
+                  "title": "Services",
+                  "description": "Show running services",
+                  "type": "command",
+                  "command": "systemctl list-units --type=service --state=running | head -10"
+                },
+                "back": {
+                  "title": "← Back",
+                  "description": "Return to main menu",
+                  "type": "back",
+                  "command": ""
+                }
+              }
+            },
+            "display": {
+              "title": "Display",
+              "description": "Display settings",
+              "type": "submenu",
+              "items": {
+                "backlight_on": {
+                  "title": "Backlight On",
+                  "description": "Turn backlight on",
+                  "type": "display_command",
+                  "command": "backlight_on"
+                },
+                "backlight_off": {
+                  "title": "Backlight Off",
+                  "description": "Turn backlight off",
+                  "type": "display_command",
+                  "command": "backlight_off"
+                },
+                "back": {
+                  "title": "← Back",
+                  "description": "Return to main menu",
+                  "type": "back",
+                  "command": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    }

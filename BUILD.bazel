@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_binary")
+load("@gazelle//:def.bzl", "gazelle")
+
+# Gazelle configuration
+gazelle(name = "gazelle")
+
+# Main binary
+go_binary(
+    name = "qnap-display-control",
+    embed = ["//cmd:cmd_lib"],
+    visibility = ["//visibility:public"],
+)

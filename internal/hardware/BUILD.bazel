@@ -1,0 +1,16 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "hardware",
+    srcs = ["io_port_access.go"],
+    importpath = "github.com/qnap/display-control/internal/hardware",
+    visibility = ["//:__subpackages__"],
+    deps = ["@org_golang_x_sys//unix"],
+)
+
+go_test(
+    name = "hardware_test",
+    srcs = ["io_port_access_test.go"],
+    embed = [":hardware"],
+    deps = ["@com_github_stretchr_testify//assert"],
+)

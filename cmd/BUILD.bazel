@@ -1,0 +1,60 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "cmd_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/qnap/display-control/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/config",
+        "//internal/controller",
+        "//internal/menu",
+        "//internal/monitor",
+        "@com_github_sirupsen_logrus//:logrus",
+        "@com_github_spf13_cobra//:cobra",
+    ],
+)
+
+go_binary(
+    name = "cmd",
+    embed = [":cmd_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "test_display",
+    srcs = ["test_display.go"],
+    deps = [
+        "//internal/config",
+        "//internal/controller",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "test_mock",
+    srcs = ["test_mock.go"],
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "test_buttons",
+    srcs = ["test_buttons.go"],
+    deps = [
+        "//internal/config",
+        "//internal/controller",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "test_button_fixes",
+    srcs = ["test_button_fixes.go"],
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "test_usb_fix",
+    srcs = ["test_usb_fix.go"],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,22 @@
+# Bazel ignore file - directories and files to exclude from Bazel builds
+
+# Build and distribution artifacts
+build/
+dist/
+downloads/
+
+wheels/
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Documentation builds
+docs/_build/

@@ -1,0 +1,238 @@
+groups:
+  - name: "Storage and Persistence"
+    description: "Configure storage and persistence settings"
+  - name: "Networking and Services"  
+    description: "Configure networking and service settings"
+  - name: "Security and Permissions"
+    description: "Configure security and permission settings"
+  - name: "Hardware Access"
+    description: "Configure hardware access settings"
+  - name: "Advanced Settings"
+    description: "Configure advanced application settings"
+
+questions:
+  # Storage Configuration
+  - variable: persistence
+    group: "Storage and Persistence"
+    label: "Configure Persistent Storage"
+    schema:
+      type: dict
+      attrs:
+        - variable: config
+          label: "Configuration Storage"
+          description: "Stores application configuration files"
+          schema:
+            type: dict
+            attrs:
+              - variable: enabled
+                label: "Enable Configuration Storage"
+                schema:
+                  type: boolean
+                  default: true
+              - variable: storageClass
+                label: "Storage Class"
+                schema:
+                  type: string
+                  default: ""
+              - variable: size
+                label: "Size"
+                schema:
+                  type: string
+                  default: "1Gi"
+              - variable: hostPath
+                label: "Host Path"
+                description: "Path on TrueNAS host system"
+                schema:
+                  type: string
+                  default: "/mnt/pool0/apps/qnap-display/config"
+
+        - variable: multimedia
+          label: "Multimedia Storage (for USB copies)"
+          description: "Storage for USB copy operations"
+          schema:
+            type: dict
+            attrs:
+              - variable: enabled
+                label: "Enable Multimedia Storage"
+                schema:
+                  type: boolean
+                  default: true
+              - variable: hostPath
+                label: "Host Path"
+                description: "Path where USB copies will be stored"
+                schema:
+                  type: string
+                  default: "/mnt/pool0/Multimedia"
+
+  # Hardware Access
+  - variable: hardwareAccess
+    group: "Hardware Access"
+    label: "Hardware Access Configuration"
+    schema:
+      type: dict
+      attrs:
+        - variable: serialPort
+          label: "Serial Port Access"
+          description: "Access to QNAP display serial port"
+          schema:
+            type: dict
+            attrs:
+              - variable: enabled
+                label: "Enable Serial Port Access"
+                schema:
+                  type: boolean
+                  default: true
+              - variable: device
+                label: "Serial Device"
+                description: "Serial port device (usually /dev/ttyS1)"
+                schema:
+                  type: string
+                  default: "/dev/ttyS1"
+
+        - variable: ioPortAccess
+          label: "I/O Port Access"
+          description: "Direct hardware I/O port access for USB copy button"
+          schema:
+            type: dict
+            attrs:
+              - variable: enabled
+                label: "Enable I/O Port Access"
+                schema:
+                  type: boolean
+                  default: true
+              - variable: port
+                label: "USB Copy Button I/O Port"
+                description: "Hardware I/O port address (hex format)"
+                schema:
+                  type: string
+                  default: "0xa05"
+
+        - variable: usbAccess
+          label: "USB Device Access"
+          description: "Access to USB devices for copy operations"
+          schema:
+            type: dict
+            attrs:
+              - variable: enabled
+                label: "Enable USB Access"
+                schema:
+                  type: boolean
+                  default: true
+              - variable: mountPath
+                label: "USB Mount Path"
+                description: "Where USB devices are typically mounted"
+                schema:
+                  type: string
+                  default: "/media/usb"
+
+  # Application Configuration
+  - variable: config
+    group: "Advanced Settings"
+    label: "Application Configuration"
+    schema:
+      type: dict
+      attrs:
+        - variable: serialPort
+          label: "Serial Port Configuration"
+          schema:
+            type: dict
+            attrs:
+              - variable: device
+                label: "Device Path"
+                schema:
+                  type: string
+                  default: "/dev/ttyS1"
+              - variable: baudRate
+                label: "Baud Rate"
+                schema:
+                  type: int
+                  default: 1200
+              - variable: timeout
+                label: "Timeout (ms)"
+                schema:
+                  type: int
+                  default: 1000
+
+        - variable: display
+          label: "Display Configuration"
+          schema:
+            type: dict
+            attrs:
+              - variable: width
+                label: "Display Width (characters)"
+                schema:
+                  type: int
+                  default: 16
+              - variable: height
+                label: "Display Height (lines)"
+                schema:
+                  type: int
+                  default: 2
+              - variable: defaultText
+                label: "Default Text"
+                schema:
+                  type: string
+                  default: "TrueNAS Ready"
+
+        - variable: logging
+          label: "Logging Configuration"
+          schema:
+            type: dict
+            attrs:
+              - variable: level
+                label: "Log Level"
+                schema:
+                  type: string
+                  default: "info"
+                  enum:
+                    - value: "debug"
+                      description: "Debug"
+                    - value: "info"
+                      description: "Info"
+                    - value: "warn"
+                      description: "Warning"
+                    - value: "error"
+                      description: "Error"
+
+  # Security Configuration
+  - variable: securityContext
+    group: "Security and Permissions"
+    label: "Security Context"
+    schema:
+      type: dict
+      attrs:
+        - variable: privileged
+          label: "Privileged Mode"
+          description: "Required for hardware I/O port access"
+          schema:
+            type: boolean
+            default: true
+        - variable: runAsRoot
+          label: "Run as Root"
+          description: "Required for hardware access"
+          schema:
+            type: boolean
+            default: true
+
+  # Service Configuration
+  - variable: service
+    group: "Networking and Services"
+    label: "Service Configuration"
+    schema:
+      type: dict
+      attrs:
+        - variable: type
+          label: "Service Type"
+          schema:
+            type: string
+            default: "ClusterIP"
+            enum:
+              - value: "ClusterIP"
+                description: "ClusterIP (internal only)"
+              - value: "NodePort"
+                description: "NodePort (external access)"
+        - variable: enabled
+          label: "Enable Service"
+          schema:
+            type: boolean
+            default: false

@@ -1,0 +1,29 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "controller",
+    srcs = [
+        "display_controller.go",
+        "led_controller.go", 
+        "system_controller.go",
+    ],
+    importpath = "github.com/qnap/display-control/internal/controller",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config",
+        "//internal/monitor",
+        "//internal/serial",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)
+
+go_test(
+    name = "controller_test",
+    srcs = ["display_controller_test.go"],
+    embed = [":controller"],
+    deps = [
+        "//internal/config",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//mock",
+    ],
+)

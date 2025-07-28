@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "monitor",
+    srcs = ["usb_copy_monitor.go"],
+    importpath = "github.com/qnap/display-control/internal/monitor",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/hardware",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)
+
+go_test(
+    name = "monitor_test",
+    srcs = ["usb_copy_monitor_test.go"],
+    embed = [":monitor"],
+    deps = [
+        "//internal/hardware",
+        "@com_github_stretchr_testify//assert",
+    ],
+)

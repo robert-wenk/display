@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qnap-display-control.fullname" . }}
+  labels:
+    {{- include "qnap-display-control.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "qnap-display-control.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "qnap-display-control.selectorLabels" . | nindent 8 }}
+    spec:
+      hostNetwork: {{ .Values.hostNetwork | default false }}
+      {{- if .Values.securityContext.runAsRoot }}
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.securityContext.privileged }}
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_RAWIO
+              - SYS_ADMIN
+        {{- end }}
+        command: ["/app/cmd"]
+        args:
+          - "--config=/config/config.json"
+          {{- if .Values.config.serialPort.device }}
+          - "--port={{ .Values.config.serialPort.device }}"
+          {{- end }}
+          {{- if .Values.config.serialPort.baudRate }}
+          - "--baud={{ .Values.config.serialPort.baudRate }}"
+          {{- end }}
+          {{- if eq .Values.config.logging.level "debug" }}
+          - "--verbose"
+          {{- end }}
+        env:
+        - name: TZ
+          value: {{ .Values.timezone | default "UTC" }}
+        - name: PUID
+          value: "0"
+        - name: PGID
+          value: "0"
+        {{- if .Values.hardwareAccess.ioPortAccess.enabled }}
+        - name: USB_COPY_PORT
+          value: "{{ .Values.hardwareAccess.ioPortAccess.port }}"
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.persistence.config.enabled }}
+        - name: config
+          mountPath: /config
+        {{- end }}
+        {{- if .Values.persistence.multimedia.enabled }}
+        - name: multimedia
+          mountPath: /mnt/pool/Multimedia
+        {{- end }}
+        {{- if .Values.hardwareAccess.serialPort.enabled }}
+        - name: serial-device
+          mountPath: {{ .Values.hardwareAccess.serialPort.device }}
+        {{- end }}
+        {{- if .Values.hardwareAccess.ioPortAccess.enabled }}
+        - name: dev-port
+          mountPath: /dev/port
+        {{- end }}
+        {{- if .Values.hardwareAccess.usbAccess.enabled }}
+        - name: usb-mount
+          mountPath: {{ .Values.hardwareAccess.usbAccess.mountPath }}
+        {{- end }}
+        - name: dev-mem
+          mountPath: /dev/mem
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f '/app/cmd' > /dev/null"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f '/app/cmd' > /dev/null"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      {{- if .Values.persistence.config.enabled }}
+      - name: config
+        {{- if .Values.persistence.config.hostPath }}
+        hostPath:
+          path: {{ .Values.persistence.config.hostPath }}
+          type: DirectoryOrCreate
+        {{- else }}
+        persistentVolumeClaim:
+          claimName: {{ include "qnap-display-control.fullname" . }}-config
+        {{- end }}
+      {{- end }}
+      {{- if .Values.persistence.multimedia.enabled }}
+      - name: multimedia
+        hostPath:
+          path: {{ .Values.persistence.multimedia.hostPath }}
+          type: DirectoryOrCreate
+      {{- end }}
+      {{- if .Values.hardwareAccess.serialPort.enabled }}
+      - name: serial-device
+        hostPath:
+          path: {{ .Values.hardwareAccess.serialPort.device }}
+          type: CharDevice
+      {{- end }}
+      {{- if .Values.hardwareAccess.ioPortAccess.enabled }}
+      - name: dev-port
+        hostPath:
+          path: /dev/port
+          type: CharDevice
+      {{- end }}
+      {{- if .Values.hardwareAccess.usbAccess.enabled }}
+      - name: usb-mount
+        hostPath:
+          path: {{ .Values.hardwareAccess.usbAccess.mountPath }}
+          type: DirectoryOrCreate
+      {{- end }}
+      - name: dev-mem
+        hostPath:
+          path: /dev/mem
+          type: CharDevice
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Always

@@ -1,0 +1,255 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qnap-display-control
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qnap-display-config
+  namespace: qnap-display-control
+data:
+  config.json: |
+    {
+      "serial_port": {
+        "device": "/dev/ttyS1",
+        "baud_rate": 1200,
+        "timeout_ms": 1000
+      },
+      "usb_copy": {
+        "io_port": "0xa05",
+        "poll_interval_ms": 50,
+        "enabled": true,
+        "command": "TIMESTAMP=$(date +%Y%m%d%H%M%S) && mkdir -p /mnt/pool/Multimedia/usb-copy$TIMESTAMP && cp -r /media/usb/* /mnt/pool/Multimedia/usb-copy$TIMESTAMP/ && sync && sleep 10"
+      },
+      "display": {
+        "width": 16,
+        "height": 2,
+        "backlight_pin": -1,
+        "contrast": 128,
+        "default_text": "TrueNAS Ready"
+      },
+      "logging": {
+        "level": "info",
+        "file": "",
+        "max_size_mb": 10,
+        "max_age_days": 30,
+        "compress": true
+      },
+      "menu": {
+        "enabled": true,
+        "button_delay_ms": 200,
+        "main_menu": {
+          "title": "Main Menu",
+          "description": "TrueNAS Control",
+          "type": "submenu",
+          "items": {
+            "system": {
+              "title": "System Info",
+              "description": "Show system information",
+              "type": "command",
+              "command": "uname -a"
+            },
+            "network": {
+              "title": "Network",
+              "description": "Network configuration",
+              "type": "submenu",
+              "items": {
+                "ip": {
+                  "title": "Show IP",
+                  "description": "Display IP address",
+                  "type": "command",
+                  "command": "hostname -I"
+                },
+                "ping": {
+                  "title": "Ping Test",
+                  "description": "Test network connectivity",
+                  "type": "command",
+                  "command": "ping -c 1 8.8.8.8"
+                },
+                "back": {
+                  "title": "← Back",
+                  "description": "Return to main menu",
+                  "type": "back",
+                  "command": ""
+                }
+              }
+            },
+            "truenas": {
+              "title": "TrueNAS",
+              "description": "TrueNAS commands",
+              "type": "submenu",
+              "items": {
+                "pools": {
+                  "title": "Pool Status",
+                  "description": "Show ZFS pool status",
+                  "type": "command",
+                  "command": "zpool status"
+                },
+                "datasets": {
+                  "title": "Datasets",
+                  "description": "List ZFS datasets",
+                  "type": "command",
+                  "command": "zfs list"
+                },
+                "services": {
+                  "title": "Services",
+                  "description": "Show running services",
+                  "type": "command",
+                  "command": "systemctl list-units --type=service --state=running | head -10"
+                },
+                "back": {
+                  "title": "← Back",
+                  "description": "Return to main menu",
+                  "type": "back",
+                  "command": ""
+                }
+              }
+            },
+            "storage": {
+              "title": "Storage",
+              "description": "Storage information",
+              "type": "command",
+              "command": "df -h"
+            },
+            "display": {
+              "title": "Display",
+              "description": "Display settings",
+              "type": "submenu",
+              "items": {
+                "backlight_on": {
+                  "title": "Backlight On",
+                  "description": "Turn backlight on",
+                  "type": "display_command",
+                  "command": "backlight_on"
+                },
+                "backlight_off": {
+                  "title": "Backlight Off",
+                  "description": "Turn backlight off",
+                  "type": "display_command",
+                  "command": "backlight_off"
+                },
+                "back": {
+                  "title": "← Back",
+                  "description": "Return to main menu",
+                  "type": "back",
+                  "command": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qnap-display-control
+  namespace: qnap-display-control
+  labels:
+    app: qnap-display-control
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qnap-display-control
+  template:
+    metadata:
+      labels:
+        app: qnap-display-control
+    spec:
+      hostNetwork: false
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+      - name: qnap-display-control
+        image: qnap-display-control:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_RAWIO
+              - SYS_ADMIN
+        command: ["/app/cmd"]
+        args:
+          - "--config=/config/config.json"
+          - "--port=/dev/ttyS1"
+          - "--baud=1200"
+        env:
+        - name: TZ
+          value: "UTC"
+        - name: PUID
+          value: "0"
+        - name: PGID
+          value: "0"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: multimedia
+          mountPath: /mnt/pool/Multimedia
+        - name: serial-device
+          mountPath: /dev/ttyS1
+        - name: dev-port
+          mountPath: /dev/port
+        - name: usb-mount
+          mountPath: /media/usb
+        - name: dev-mem
+          mountPath: /dev/mem
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f '/app/cmd' > /dev/null"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f '/app/cmd' > /dev/null"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: config
+        configMap:
+          name: qnap-display-config
+      - name: multimedia
+        hostPath:
+          path: /mnt/pool0/Multimedia
+          type: DirectoryOrCreate
+      - name: serial-device
+        hostPath:
+          path: /dev/ttyS1
+          type: CharDevice
+      - name: dev-port
+        hostPath:
+          path: /dev/port
+          type: CharDevice
+      - name: usb-mount
+        hostPath:
+          path: /media/usb
+          type: DirectoryOrCreate
+      - name: dev-mem
+        hostPath:
+          path: /dev/mem
+          type: CharDevice
+      restartPolicy: Always

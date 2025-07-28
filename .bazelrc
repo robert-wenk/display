@@ -1,0 +1,37 @@
+# .bazelrc - Bazel configuration for the QNAP Display Control project
+
+# Use Bzlmod instead of WORKSPACE
+common --enable_bzlmod
+
+# Rust specific configurations
+build --incompatible_enable_cc_toolchain_resolution
+
+# Optimization for production builds
+build:opt --compilation_mode=opt
+build:opt --strip=always
+
+# Debug configuration
+build:debug --compilation_mode=dbg
+build:debug --strip=never
+
+# Test configuration
+test --test_output=errors
+test --test_summary=detailed
+
+# Cross-compilation for different architectures (useful for NAS deployment)
+build:x86_64 --cpu=k8
+build:aarch64 --cpu=aarch64
+
+# Static linking for standalone binaries
+build:static --linkopt=-static
+build:static --features=fully_static_link
+
+# Fast builds during development
+build:dev --compilation_mode=fastbuild
+build:dev --spawn_strategy=local
+
+# CI/CD friendly settings
+build:ci --disk_cache=/tmp/bazel-cache
+build:ci --repository_cache=/tmp/bazel-repo-cache
+build:ci --verbose_failures
+build:ci --test_output=all

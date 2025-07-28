@@ -1,0 +1,27 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "menu",
+    srcs = ["menu.go"],
+    importpath = "github.com/qnap/display-control/internal/menu",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/config",
+        "//internal/serial",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)
+
+go_test(
+    name = "menu_test",
+    srcs = [
+        "menu_test.go",
+        "mock_display.go",
+    ],
+    embed = [":menu"],
+    deps = [
+        "//internal/config",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+    ],
+)
